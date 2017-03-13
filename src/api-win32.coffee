@@ -17,7 +17,7 @@ wmic = (cls, keys, callback) ->
 
 getAdapterConfig = (callback) ->
   wmic 'Win32_NetworkAdapterConfiguration',
-    ['Index', 'IPEnabled', 'DefaultIPGateway'],
+    ['Index', 'IPEnabled', 'DefaultIPGateway','Description'],
     (error, records) ->
       callback(error, records)
 
@@ -35,6 +35,7 @@ getDefaultGateway = (callback) ->
       continue if not record['IPEnabled']?
       continue if not record['DefaultIPGateway']?
       continue if not record['Index']?
+      continue if not record['Description']?
       continue if record['IPEnabled'] != 'TRUE'
       continue if record['DefaultIPGateway'].trim() == ''
       continue if isNaN(parseInt(record['Index']))
@@ -45,10 +46,10 @@ getDefaultGateway = (callback) ->
         switch net.isIP(address)
           when 4
             data[index] || = []
-            data[index].push {family: 'IPv4', address: address}
+            data[index].push {family: 'IPv4', address: address, description: record['Description']}
           when 6
             data[index] || = []
-            data[index].push {family: 'IPv6', address: address}
+            data[index].push {family: 'IPv6', address: address, description: record['Description']}
           else
             return callback(new Error("#{address} is not IP address"))
     callback(null, data)
