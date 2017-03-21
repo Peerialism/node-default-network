@@ -23,7 +23,7 @@ getAdapterConfig = (callback) ->
 
 getAdapter = (callback) ->
   wmic 'Win32_NetworkAdapter',
-    ['Index', 'NetConnectionID'],
+    ['Index', 'NetConnectionID','AdapterType'],
     (error, records) ->
       callback(error, records)
 
@@ -40,26 +40,28 @@ getDefaultGateway = (callback) ->
       continue if record['DefaultIPGateway'].trim() == ''
       continue if isNaN(parseInt(record['Index']))
       index = record['Index']
-      defaultGateway = record['DefaultIPGateway'].trim()
-      defaultGateway = ((defaultGateway.match(/{(.*)}/) || [])[1] || '')
-      for address in defaultGateway.split(';')
-        switch net.isIP(address)
-          when 4
-            data[index] || = []
-            data[index].push {family: 'IPv4', address: address, description: record['Description']}
-          when 6
-            data[index] || = []
-            data[index].push {family: 'IPv6', address: address, description: record['Description']}
-          else
-            return callback(new Error("#{address} is not IP address"))
-    callback(null, data)
+      getAdapterNameByIndex(index, returnRecord) ->
+        defaultGateway = record['DefaultIPGateway'].trim()
+        defaultGateway = ((defaultGateway.match(/{(.*)}/) || [])[1] || '')
+        for address in defaultGateway.split(';')
+          switch net.isIP(address)
+            when 4
+              data[index] || = []
+              data[index].push {family: 'IPv4', address: address, description: record['Description'], adapterType:returnRecord['AdapterType']}
+            when 6
+              data[index] || = []
+              data[index].push {family: 'IPv6', address: address, description: record['Description'], adapterType:returnRecord['AdapterType']}
+           else
+              return callback(new Error("#{address} is not IP address"))
+      callback(null, data)
 
 getAdapterNameByIndex = (index, callback) ->
   getAdapter (error, records) ->
     return callback(error) if error?
     for record in records
       if record['Index'] == index
-        return callback(null, record['NetConnectionID'])
+        returnRecord = {netConnectionId: record['NetConnectionId'], adapterType: record['AdapterType']}
+        return callback(null, returnRecord)
     callback(new Error("inteface #{index} is not available"))
 
 getDefaultNetwork = (callback) ->
