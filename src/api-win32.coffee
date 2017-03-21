@@ -59,7 +59,8 @@ getAdapterNameByIndex = (index, callback) ->
     return callback(error) if error?
     for record in records
       if record['Index'] == index
-        return callback(null, record['AdapterType'])
+        returnRecord = {netConnectionId: record['NetConnectionId'], adapterType: record['AdapterType']}
+        return callback(null, returnRecord)
     callback(new Error("inteface #{index} is not available"))
 
 getDefaultNetwork = (callback) ->
@@ -70,13 +71,13 @@ getDefaultNetwork = (callback) ->
       (index, callback) ->
         getAdapterNameByIndex index, (error, name) ->
           return callback(error) if error?
-          iface = {index: index, name: name}
+          iface = {index: index, name: name.netConnectionId, adapterType: name.adapterType}
           callback(null, iface)
       (error, ifaces) ->
         return callback(error) if error?
         data = {}
         for iface in ifaces
-          data[iface.name] = gateways[iface.index]
+          data[iface.name] = {gateway:gateways[iface.index], adapterType: iface.adapterType}
         callback(null, data)
 
 collect = (callback) ->
