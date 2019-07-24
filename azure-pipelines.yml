@@ -1,0 +1,17 @@
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+steps:
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '8.x'
+
+- script: npm install
+  displayName: 'NPM Install'
+
+- task: Npm@1
+  displayName: 'NPM Publish'
+  inputs:
+    command: publish
+    publishEndpoint: 'npm registry'
